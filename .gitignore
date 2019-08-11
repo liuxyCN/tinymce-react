@@ -4,3 +4,5 @@ lib
 storybook-static
 *.tgz
 scratch
+.idea
+package-lock.json

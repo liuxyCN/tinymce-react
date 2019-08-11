@@ -7,14 +7,15 @@
  */
 
 import * as React from 'react';
-import { EventHandler, IEvents } from '../Events';
+import {EventHandler, IEvents} from '../Events';
 import * as ScriptLoader from '../ScriptLoader';
-import { getTinymce } from '../TinyMCE';
-import { bindHandlers, isFunction, isTextarea, mergePlugins, uuid } from '../Utils';
-import { EditorPropTypes, IEditorPropTypes } from './EditorPropTypes';
+import {getTinymce} from '../TinyMCE';
+import {bindHandlers, isFunction, isTextarea, mergePlugins, uuid} from '../Utils';
+import {EditorPropTypes, IEditorPropTypes} from './EditorPropTypes';
 
 export interface IProps {
   apiKey: string;
+  src: string;
   id: string;
   inline: boolean;
   initialValue: string;
@@ -29,7 +30,9 @@ export interface IProps {
   textareaName: string;
 }
 
-export interface IAllProps extends Partial<IProps>, Partial<IEvents> {}
+export interface IAllProps extends Partial<IProps>, Partial<IEvents> {
+}
+
 const scriptState = ScriptLoader.create();
 
 export class Editor extends React.Component<IAllProps> {
@@ -46,7 +49,7 @@ export class Editor extends React.Component<IAllProps> {
   private currentContent?: string | null;
   private boundHandlers: Record<string, EventHandler<any>>;
 
-  constructor (props: Partial<IAllProps>) {
+  constructor(props: Partial<IAllProps>) {
     super(props);
     this.id = this.props.id || uuid('tiny-react');
     this.elementRef = React.createRef<Element>();
@@ -54,7 +57,7 @@ export class Editor extends React.Component<IAllProps> {
     this.boundHandlers = {};
   }
 
-  public componentDidUpdate (prevProps: Partial<IAllProps>) {
+  public componentDidUpdate(prevProps: Partial<IAllProps>) {
     if (this.editor && this.editor.initialized) {
       bindHandlers(this.editor, this.props, this.boundHandlers);
 
@@ -74,10 +77,14 @@ export class Editor extends React.Component<IAllProps> {
       this.initialise();
     } else if (this.elementRef.current && this.elementRef.current.ownerDocument) {
       const doc = this.elementRef.current.ownerDocument;
+      const src = this.props.src;
       const channel = this.props.cloudChannel;
       const apiKey = this.props.apiKey ? this.props.apiKey : 'no-api-key';
-
-      ScriptLoader.load(scriptState, doc, `https://cdn.tiny.cloud/1/${apiKey}/tinymce/${channel}/tinymce.min.js`, this.initialise);
+      if (src) {
+        ScriptLoader.load(scriptState, doc, src, this.initialise);
+      } else {
+        ScriptLoader.load(scriptState, doc, `https://cdn.tiny.cloud/1/${apiKey}/tinymce/${channel}/tinymce.min.js`, this.initialise);
+      }
     }
   }
 
@@ -116,7 +123,7 @@ export class Editor extends React.Component<IAllProps> {
     }
 
     getTinymce().init(finalInit);
-  }
+  };
 
   private initEditor(initEvent: Event, editor: any) {
     const value =
@@ -140,7 +147,7 @@ export class Editor extends React.Component<IAllProps> {
   }
 
   private renderInline() {
-    const { tagName = 'div' } = this.props;
+    const {tagName = 'div'} = this.props;
 
     return React.createElement(tagName, {
       ref: this.elementRef,
@@ -151,7 +158,7 @@ export class Editor extends React.Component<IAllProps> {
   private renderIframe() {
     return React.createElement('textarea', {
       ref: this.elementRef,
-      style: { visibility: 'hidden' },
+      style: {visibility: 'hidden'},
       name: this.props.textareaName,
       id: this.id
     });
